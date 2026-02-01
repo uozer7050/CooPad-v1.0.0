@@ -352,9 +352,7 @@ pip install -r requirements.txt
 python3 main.py
 ```
 
-## 📄 License
 
-See LICENSE file for details.
 
 ## 🔗 Links
 
