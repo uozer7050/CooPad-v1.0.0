@@ -2,12 +2,14 @@
 
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-<img width="2560" height="1664" alt="upscalemedia-transformed" src="https://github.com/user-attachments/assets/e1f90f4a-4b4d-4847-ac96-287ea1b00037" />
+<img width="2560" height="1664" alt="upscalemedia-transformed" src="https://github.com/user-attachments/assets/fdd04872-3608-4209-80a8-5208af50ac37" />
 
 
 
 
-<img width="1093" height="725" alt="image" src="https://github.com/user-attachments/assets/aada6173-6870-421e-941d-cd35b2af34f9" />
+
+<img width="2186" height="1450" alt="upscalemedia-transformed (1)" src="https://github.com/user-attachments/assets/9731fcf5-f0d2-48ef-b0e0-55f6bab4c2b7" />
+
 
 **Cross-platform remote gamepad application for gaming over network**
 
