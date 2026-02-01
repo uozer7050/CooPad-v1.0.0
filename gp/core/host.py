@@ -119,7 +119,7 @@ class _UInputGamepad:
 
 
 class GamepadHost:
-    def __init__(self, bind_ip: str = "", port: int = 7777, status_cb=None):
+    def __init__(self, bind_ip: str = "", port: int = 7777, status_cb=None, telemetry_cb=None):
         self.bind_ip = bind_ip
         self.port = port
         self._sock: Optional[socket.socket] = None
@@ -130,7 +130,15 @@ class GamepadHost:
         self._owner = None
         self._last_time = 0.0
         self.status_cb = status_cb or (lambda s: print(f"HOST: {s}"))
+        self.telemetry_cb = telemetry_cb or (lambda s: None)
         self._vg = None
+        self._packet_count = 0
+        self._latency_samples = []
+        self._last_telemetry_time = 0
+        # Rate limiting: track packets per client
+        self._rate_limit_window = 1.0  # seconds
+        self._rate_limit_max = 150  # max packets per second per client
+        self._client_packet_counts = {}  # client_id -> (timestamp, count)
 
     def start(self):
         if self._thread and self._thread.is_alive():
@@ -193,6 +201,10 @@ class GamepadHost:
             if state.version != PROTOCOL_VERSION:
                 self.status_cb(f'bad version {state.version} from {addr}')
                 continue
+            
+            # Rate limiting check
+            if not self._check_rate_limit(state.client_id, addr):
+                continue
 
             # ownership
             if self._owner is None:
@@ -211,6 +223,10 @@ class GamepadHost:
                     continue
             self._last_seq = state.sequence
             self._last_time = time.time()
+            self._packet_count += 1
+
+            # Calculate telemetry
+            self._update_telemetry(state)
 
             # apply state to vgamepad if available
             try:
@@ -308,3 +324,83 @@ class GamepadHost:
             self._vg.update()
         except Exception as e:
             self.status_cb(f'vgamepad apply error: {e}')
+    
+    def _update_telemetry(self, state):
+        """Calculate and report telemetry metrics."""
+        current_time = time.perf_counter()
+        
+        # Calculate network latency from packet timestamp
+        packet_time_ns = state.timestamp
+        packet_time_s = packet_time_ns / 1_000_000_000.0
+        current_time_ns = time.perf_counter_ns()
+        current_time_s = current_time_ns / 1_000_000_000.0
+        
+        latency_ms = (current_time_s - packet_time_s) * 1000
+        
+        # Track samples for jitter calculation
+        self._latency_samples.append(latency_ms)
+        if len(self._latency_samples) > 50:
+            self._latency_samples.pop(0)
+        
+        # Calculate jitter (standard deviation of latency)
+        if len(self._latency_samples) >= 2:
+            import statistics
+            jitter_ms = statistics.stdev(self._latency_samples)
+        else:
+            jitter_ms = 0.0
+        
+        # Calculate receive rate
+        if not hasattr(self, '_rate_start_time'):
+            self._rate_start_time = current_time
+            self._rate_packet_count = 0
+        
+        self._rate_packet_count += 1
+        elapsed = current_time - self._rate_start_time
+        if elapsed >= 1.0:
+            rate_hz = self._rate_packet_count / elapsed
+            self._rate_start_time = current_time
+            self._rate_packet_count = 0
+        else:
+            rate_hz = 0
+        
+        # Report telemetry every second
+        if current_time - self._last_telemetry_time >= 1.0:
+            if rate_hz > 0:
+                self.telemetry_cb(f'Latency: {latency_ms:.1f}ms | Jitter: {jitter_ms:.1f}ms | Rate: {rate_hz:.1f}Hz | seq={state.sequence}')
+            else:
+                self.telemetry_cb(f'Latency: {latency_ms:.1f}ms | Jitter: {jitter_ms:.1f}ms | seq={state.sequence}')
+            self._last_telemetry_time = current_time
+    
+    def _check_rate_limit(self, client_id: int, addr) -> bool:
+        """Check if client is within rate limits. Returns True if allowed, False if blocked."""
+        current_time = time.time()
+        
+        # Clean up old entries
+        to_remove = []
+        for cid, (timestamp, _) in self._client_packet_counts.items():
+            if current_time - timestamp > self._rate_limit_window * 2:
+                to_remove.append(cid)
+        for cid in to_remove:
+            del self._client_packet_counts[cid]
+        
+        # Check/update current client
+        if client_id in self._client_packet_counts:
+            timestamp, count = self._client_packet_counts[client_id]
+            if current_time - timestamp < self._rate_limit_window:
+                if count >= self._rate_limit_max:
+                    # Rate limit exceeded - log once per window
+                    if count == self._rate_limit_max:
+                        self.status_cb(f'rate limit exceeded for client {client_id} from {addr}')
+                    self._client_packet_counts[client_id] = (timestamp, count + 1)
+                    return False
+                else:
+                    self._client_packet_counts[client_id] = (timestamp, count + 1)
+                    return True
+            else:
+                # New window
+                self._client_packet_counts[client_id] = (current_time, 1)
+                return True
+        else:
+            # First packet from this client
+            self._client_packet_counts[client_id] = (current_time, 1)
+            return True

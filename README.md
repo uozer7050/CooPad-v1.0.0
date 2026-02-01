@@ -1,146 +1,275 @@
-# CooPad — Remote Gamepad
+# CooPad — Remote Gamepad over Network
 
-CooPad is a cross-platform remote gamepad application that allows you to use a gamepad over the network. A client captures gamepad inputs and sends them to a host, which creates a virtual gamepad that games can use.
+**Cross-platform remote gamepad application for gaming over network**
 
-## 🎯 New: Enhanced User Experience
+CooPad allows you to use a physical gamepad connected to one computer (Client) to control games on another computer (Host) over a local network or VPN. Perfect for couch gaming, game streaming, or playing with friends remotely.
 
-**Version 5.1 includes major UX improvements:**
-- 🟢 **Smart Platform Detection**: Automatically detects your OS and available drivers
-- 💡 **User-Friendly Error Messages**: Clear explanations with actionable solutions
-- 📊 **Visual Status Indicators**: Color-coded status (✓/⚠/✗) for instant feedback
-- 📚 **Built-in Help System**: Platform-specific setup guides and troubleshooting
-- 🔍 **Pre-Flight Checks**: Validates capabilities before starting to prevent errors
+## 🎮 Features
 
-**See [UX_IMPROVEMENTS_TR.md](UX_IMPROVEMENTS_TR.md) for details (Turkish) or [CROSS_PLATFORM_TECHNICAL_EXPLANATION.md](CROSS_PLATFORM_TECHNICAL_EXPLANATION.md) for technical details.**
+- **Cross-Platform Support**: Works on Windows and Linux (all combinations supported)
+- **Low Latency**: 1-10ms on local networks, optimized for real-time gaming
+- **Configurable Update Rates**: Choose between 30Hz, 60Hz, or 90Hz for optimal performance
+- **Real-Time Telemetry**: Monitor latency, jitter, and packet rates
+- **Smart Platform Detection**: Automatically detects your OS and available drivers
+- **User-Friendly Interface**: Clean GUI with helpful status indicators and setup guides
+- **Secure**: Built-in packet validation and rate limiting protection
 
-## ✅ Cross-Platform Support
-
-CooPad works on both **Linux** and **Windows** as host and client:
-- ✅ Linux Host + Linux Client
-- ✅ Linux Host + Windows Client
-- ✅ Windows Host + Linux Client  
-- ✅ Windows Host + Windows Client
-
-**📖 See [CROSS_PLATFORM_COMPATIBILITY.md](CROSS_PLATFORM_COMPATIBILITY.md) for detailed setup instructions, troubleshooting, and known issues.**
-
-## Quick Start
-
-### Test Your Platform
-
-Run the compatibility checker to verify your setup:
-```bash
-python3 platform_test.py
-```
+## 🚀 Quick Start
 
 ### Installation
 
 #### Linux
+
+**Option 1: Install .deb package (Recommended)**
 ```bash
-# Install system packages
+# Download the latest .deb from Releases
+sudo dpkg -i coopad_*.deb
+
+# Run from applications menu or terminal
+coopad
+```
+
+**Option 2: Run from source**
+```bash
+# Install system dependencies
 sudo apt update
-sudo apt install python3-tk python3-dev build-essential
+sudo apt install python3-tk python3-dev python3-pip
 
-# Install Python packages
-pip install -r requirements.txt
+# Install Python dependencies
+pip3 install -r requirements.txt
 
-# Setup uinput permissions (for host)
-chmod +x scripts/setup_uinput.sh
-./scripts/setup_uinput.sh
-# Then log out and back in
+# Run the application
+python3 main.py
 ```
 
 #### Windows
+
+**Option 1: Download executable (Recommended)**
+```
+1. Download coopad.exe from Releases
+2. Double-click to run
+3. (Optional) Create a shortcut on your desktop
+```
+
+**Option 2: Run from source**
 ```bash
-# Install ViGEm Bus Driver (for host)
+# Install Python dependencies
+pip install -r requirements.txt
+
+# For Host mode, install ViGEm Bus Driver:
 # Download from: https://github.com/ViGEm/ViGEmBus/releases
 
-# Install Python packages
-pip install -r requirements.txt
-pip install vgamepad
+# Run the application
+python main.py
 ```
 
-### Run the Application
+### Basic Usage
 
+1. **Start Host** (on the computer where you want to play games):
+   - Open CooPad
+   - Click "Start Host" 
+   - Games will now see a virtual Xbox 360 controller
+
+2. **Start Client** (on the computer with the physical gamepad):
+   - Open CooPad
+   - Enter the Host's IP address
+   - Click "Start Client"
+   - Your gamepad inputs will be sent to the Host
+
+3. **Configure Settings**:
+   - Go to the Settings tab
+   - Choose update rate based on your network:
+     - 30 Hz: Lower bandwidth, suitable for slower networks
+     - 60 Hz: Recommended for most users
+     - 90 Hz: High performance for low-latency networks
+
+## 📡 Network Setup
+
+### Local Network (Same WiFi/LAN)
+- Both computers must be on the same network
+- Default port: 7777 (UDP)
+- Firewall may need to allow the application
+
+### Remote/Internet (VPN Required)
+For playing over the internet, use a VPN solution:
+- **ZeroTier**: Easy setup, free tier available
+- **Tailscale**: Modern, automatic, free for personal use
+- **Hamachi**: Classic VPN solution
+- **WireGuard**: Advanced users, self-hosted
+
+## 🖥️ Platform-Specific Setup
+
+### Linux Host Requirements
+- **evdev**: For virtual gamepad creation
+- **uinput module**: Must be loaded and accessible
+
+The .deb package automatically:
+- Installs udev rules for uinput access
+- Adds user to 'input' group
+- Loads the uinput module
+
+**Manual setup (if needed):**
 ```bash
-# Start the GUI
-python3 main.py  # Linux
-python main.py   # Windows
+# Load uinput module
+sudo modprobe uinput
+
+# Setup permissions (automatically done by .deb)
+./scripts/setup_uinput.sh
+
+# Then log out and back in
 ```
 
-## Testing
+### Windows Host Requirements
+- **ViGEm Bus Driver**: Virtual gamepad driver
+  - Download from: https://github.com/ViGEm/ViGEmBus/releases
+  - Install the driver before running CooPad
+  - Requires administrator privileges to install
 
-```bash
-# Platform compatibility check
-python3 platform_test.py
+### Client Requirements (Both Platforms)
+- **pygame**: For reading physical gamepad input
+- **Physical gamepad**: USB or Bluetooth connected
+- Client can run without a physical gamepad (sends test data)
 
-# Full integration test (host + client)
-python3 integration_test.py
+## 📊 Monitoring & Performance
 
-# Cross-platform compatibility tests
-python3 test_cross_platform.py
+### Network Statistics
+Both Host and Client tabs show real-time telemetry:
+- **Latency**: Round-trip time for packets (lower is better)
+- **Jitter**: Variation in latency (lower is better)
+- **Packet Rate**: Actual packets per second
+- **Sequence Number**: For packet loss detection
 
-# UX improvements demonstration
-python3 demo_ux_improvements.py
+### Optimal Settings
+- **LAN**: 60-90 Hz for smooth gameplay
+- **VPN (Same City)**: 60 Hz recommended
+- **VPN (Remote)**: 30-60 Hz depending on connection quality
+- **WiFi**: Start with 60 Hz, adjust based on performance
 
-# UI mockup visualization
-python3 ui_mockup.py
-```
+## 🔒 Security Features
 
-## Documentation
+- **Packet Validation**: All packets are validated for size and content
+- **Rate Limiting**: Protection against DoS attacks (150 packets/sec max)
+- **Input Sanitization**: Gamepad values are clamped to valid ranges
+- **Version Checking**: Ensures protocol compatibility
 
-### User Experience & Setup
-- **[UX_IMPROVEMENTS_TR.md](UX_IMPROVEMENTS_TR.md)** - Turkish documentation of UI improvements
-  - All user questions answered
-  - Error message improvements
-  - Platform status indicators
-  - Cross-platform explanation
+## 🛠️ Building from Source
 
-- **[CROSS_PLATFORM_TECHNICAL_EXPLANATION.md](CROSS_PLATFORM_TECHNICAL_EXPLANATION.md)** - Technical deep-dive
-  - Why cross-platform works
-  - Packet format explanation
-  - Platform independence proof
-  - Virtual gamepad creation details
-
-### Complete Guides
-- **[CROSS_PLATFORM_COMPATIBILITY.md](CROSS_PLATFORM_COMPATIBILITY.md)** - Complete cross-platform guide
-  - Platform-specific requirements
-  - Setup instructions for Linux and Windows
-  - Known issues and troubleshooting
-  - Performance expectations
-  - Network configuration
-
-- **[TEST_SONUCLARI_TR.md](TEST_SONUCLARI_TR.md)** - Turkish test results
-- **[TESTING_SUMMARY.md](TESTING_SUMMARY.md)** - Executive summary
-
-## Features
-
-- Remote gamepad over local network or VPN
-- Full Xbox 360 gamepad emulation
-- Low latency (1-10ms on local network)
-- Cross-platform: Linux ↔ Windows
-- No special drivers needed on client
-- Supports physical gamepad input via pygame
-
-## Requirements
-
-### Common (Both Platforms)
+### Build Requirements
 - Python 3.8+
-- Pillow
-- pygame
+- PyInstaller
+- Platform-specific requirements (see above)
 
-### Linux Host
-- evdev (virtual gamepad via uinput)
-- uinput kernel module
-- Permissions for /dev/uinput
+### Build Commands
 
-### Windows Host
-- vgamepad (virtual gamepad via ViGEm)
-- ViGEm Bus Driver
+**Linux .deb package:**
+```bash
+./scripts/build_deb.sh 1.0.0
+```
 
-### Client (Both Platforms)
-- pygame (for joystick input)
-- Network access to host
+**Windows executable:**
+```bash
+scripts\build_windows.bat 1.0.0
+# or
+.\scripts\build_windows.ps1 1.0.0
+```
 
-## License
+**Both platforms:**
+```bash
+./scripts/build_all.sh 1.0.0
+```
+
+Output will be in the `dist/` directory.
+
+## 🐛 Troubleshooting
+
+### Host Won't Start
+**Linux:**
+- Check if uinput module is loaded: `lsmod | grep uinput`
+- Check permissions: `ls -l /dev/uinput`
+- Run setup script: `./scripts/setup_uinput.sh`
+- Or run with sudo: `sudo -E python3 main.py`
+
+**Windows:**
+- Install ViGEm Bus Driver from official releases
+- Restart computer after driver installation
+- Run as Administrator if needed
+
+### Client Can't Connect
+- Verify both devices are on the same network
+- Check firewall settings (allow UDP port 7777)
+- Test with localhost first: use 127.0.0.1 as target
+- For VPN: ensure both devices are connected to VPN
+
+### High Latency/Jitter
+- Switch to a wired connection instead of WiFi
+- Lower the update rate (Settings tab)
+- Close bandwidth-intensive applications
+- Check for network congestion
+
+### No Gamepad Detected (Client)
+- Ensure gamepad is connected and working
+- Install pygame: `pip install pygame`
+- Test gamepad with system tools first
+- Client can run without gamepad (sends test data)
+
+## 📝 Technical Details
+
+### Protocol
+- **Transport**: UDP for low latency
+- **Port**: 7777 (configurable)
+- **Packet Format**: Binary struct (27 bytes)
+- **Version**: Protocol v2
+
+### Supported Platforms
+- ✅ Linux (Host + Client)
+- ✅ Windows (Host + Client)
+- ✅ All cross-platform combinations work
+
+### Virtual Gamepad
+- **Linux**: evdev/uinput driver
+- **Windows**: ViGEm Bus Driver (Xbox 360 emulation)
+- **Format**: Full Xbox 360 controller layout
+
+## 🤝 Contributing
+
+This is an open-source project. Contributions are welcome!
+
+### Development Setup
+```bash
+# Clone the repository
+git clone https://github.com/uozer7050/v5.1.git
+cd v5.1
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run from source
+python3 main.py
+```
+
+## 📄 License
 
 See LICENSE file for details.
+
+## 🔗 Links
+
+- **GitHub Repository**: https://github.com/uozer7050/v5.1
+- **Issues & Support**: https://github.com/uozer7050/v5.1/issues
+- **Releases**: https://github.com/uozer7050/v5.1/releases
+
+## 📅 Version History
+
+See [CHANGELOG_TR.md](CHANGELOG_TR.md) for detailed changes (Turkish).
+
+### Latest Version: 5.1
+- Configurable UDP update rates (30/60/90 Hz)
+- Real-time network telemetry (latency, jitter)
+- Enhanced security (packet validation, rate limiting)
+- Improved build system for Windows and Linux
+- Settings tab with network configuration
+- Cross-platform compatibility improvements
+- User-friendly error messages and status indicators
+
+---
+
+**Made with ❤️ for the gaming community**
