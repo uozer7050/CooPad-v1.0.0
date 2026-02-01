@@ -4,6 +4,8 @@
 
 CooPad allows you to use a physical gamepad connected to one computer (Client) to control games on another computer (Host) over a local network or VPN. Perfect for couch gaming, game streaming, or playing with friends remotely.
 
+<img width="1097" height="723" alt="image" src="https://github.com/user-attachments/assets/55d0ac55-d2bd-42d8-9448-b0782c81c116" />
+
 ## 🎮 Features
 
 - **Cross-Platform Support**: Works on Windows and Linux (all combinations supported)
