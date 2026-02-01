@@ -7,7 +7,7 @@ CooPad allows you to use a physical gamepad connected to one computer (Client) t
 ## 🎮 Features
 
 - **Cross-Platform Support**: Works on Windows and Linux (all combinations supported)
-- **Controller Profiles**: Built-in support for PS4, PS5, Xbox 360, and generic controllers
+- **Controller Profiles**: Built-in support for PS4, PS5, Xbox 360, Nintendo Switch (Joy-Con and Pro Controller), and generic controllers
 - **Low Latency**: 1-10ms on local networks, optimized for real-time gaming
 - **Configurable Update Rates**: Choose between 30Hz, 60Hz, or 90Hz for optimal performance
 - **Real-Time Telemetry**: Monitor latency, jitter, and packet rates
@@ -84,6 +84,8 @@ python3 main.py
      - PS4 Controller
      - PS5 Controller
      - Xbox 360 Controller
+     - Nintendo Switch Joy-Con
+     - Nintendo Switch Pro Controller
      - Generic (for other controllers)
    - Choose update rate based on your network:
      - 30 Hz: Lower bandwidth, suitable for slower networks

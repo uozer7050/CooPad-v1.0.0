@@ -293,7 +293,17 @@ class Xbox360ControllerProfile(ControllerProfile):
 
 
 class NintendoSwitchJoyConProfile(ControllerProfile):
-    """Nintendo Switch Joy-Con (Left or Right) profile (pygame 2.x)."""
+    """
+    Nintendo Switch Joy-Con (Left or Right) profile (pygame 2.x).
+    
+    Note: Each Joy-Con has only ONE analog stick. This profile maps the single
+    stick to both left and right stick inputs in the protocol, so the stick
+    will control whichever stick the game expects. When using a single Joy-Con,
+    games expecting dual-stick input will only receive input from one stick.
+    
+    For full dual-stick support, use the Nintendo Switch Pro Controller profile
+    or pair both Joy-Cons (though pygame may recognize them as separate devices).
+    """
     
     def __init__(self):
         super().__init__()
@@ -308,6 +318,8 @@ class NintendoSwitchJoyConProfile(ControllerProfile):
             Y Axis: Down -> Up (inverted from typical)
             
             Note: The Joy-Cons have 4 axes but only 2 are used for the stick.
+            Since each Joy-Con has only one physical stick, we map it to both
+            left and right stick positions in the protocol.
         """
         return {
             'left_x': 0,    # Single stick X axis
@@ -327,8 +339,8 @@ class NintendoSwitchJoyConProfile(ControllerProfile):
             Button 1: D-pad Down
             Button 2: D-pad Left
             Button 3: D-pad Right
-            Button 4: SL
-            Button 5: SR
+            Button 4: SL (mapped as Left Shoulder)
+            Button 5: SR (mapped as Right Shoulder)
             Button 8: - (Minus)
             Button 10: Stick In
             Button 13: Capture
@@ -340,24 +352,27 @@ class NintendoSwitchJoyConProfile(ControllerProfile):
             Button 1: B
             Button 2: X
             Button 3: Y
-            Button 4: SL
-            Button 5: SR
+            Button 4: SL (mapped as Left Shoulder)
+            Button 5: SR (mapped as Right Shoulder)
             Button 9: + (Plus)
             Button 11: Stick In
             Button 12: Home
             Button 14: R
             Button 15: ZR
             
-        This mapping provides support for when either Joy-Con is used.
+        Note: Buttons 4/5 (SL/SR) and 14/15 (L/R, ZL/ZR) serve different purposes
+        depending on Joy-Con orientation. When used standalone, SL/SR act as
+        shoulders. When paired, L/R/ZL/ZR are the primary shoulder buttons.
+        This mapping prioritizes the paired configuration.
         """
         return {
             # Right Joy-Con face buttons (when right is primary)
-            0: 0x1000,    # A
-            1: 0x2000,    # B
-            2: 0x4000,    # X
-            3: 0x8000,    # Y
+            0: 0x1000,    # A (or D-pad Up on Left Joy-Con)
+            1: 0x2000,    # B (or D-pad Down on Left Joy-Con)
+            2: 0x4000,    # X (or D-pad Left on Left Joy-Con)
+            3: 0x8000,    # Y (or D-pad Right on Left Joy-Con)
             
-            # Shoulder buttons (both Joy-Cons)
+            # SL/SR buttons (when Joy-Con used standalone)
             4: 0x0100,    # SL → Left Shoulder
             5: 0x0200,    # SR → Right Shoulder
             
@@ -369,9 +384,11 @@ class NintendoSwitchJoyConProfile(ControllerProfile):
             10: 0x0040,   # Stick In (Left Joy-Con) → Left Thumb
             11: 0x0080,   # Stick In (Right Joy-Con) → Right Thumb
             
-            # Trigger buttons (mapped as shoulders when not analog)
-            14: 0x0100,   # L/R → Left Shoulder
-            15: 0x0200,   # ZL/ZR → Right Shoulder
+            # L/R and ZL/ZR buttons (when Joy-Cons paired)
+            # Note: These overlap with buttons 4/5 in the protocol.
+            # Games will receive shoulder button input from either SL/SR or L/R/ZL/ZR
+            14: 0x0100,   # L/R → Left Shoulder (same as button 4)
+            15: 0x0200,   # ZL/ZR → Right Shoulder (same as button 5)
         }
 
 
