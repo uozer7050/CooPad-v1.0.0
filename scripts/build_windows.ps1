@@ -20,17 +20,12 @@ if (-not (Test-Path "main.py")) {
 # Install dependencies
 # Note: Using pygame-ce (Community Edition) which supports Python 3.12+
 Write-Host "Installing dependencies..." -ForegroundColor Yellow
-pip install pyinstaller pillow pygame-ce
+pip install pyinstaller pillow pygame-ce vgamepad
 
-# Build executable
-Write-Host "Running PyInstaller..." -ForegroundColor Yellow
-pyinstaller --noconfirm --onefile `
-  --name coopad `
-  --add-data "img;img" `
-  --add-data "gp;gp" `
-  --windowed `
-  --icon=img\src_CooPad.ico `
-  main.py
+# Build executable using spec file
+Write-Host "Running PyInstaller with spec file..." -ForegroundColor Yellow
+Write-Host "Note: The spec file handles proper bundling of vgamepad DLL files" -ForegroundColor Cyan
+pyinstaller --noconfirm coopad.spec
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host ""

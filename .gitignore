@@ -15,6 +15,8 @@ pip-wheel-metadata/
 
 # PyInstaller
 *.spec
+# Exception: Keep the main application spec file
+!coopad.spec
 
 # Virtual environments
 venv/

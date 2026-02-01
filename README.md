@@ -168,6 +168,11 @@ Both Host and Client tabs show real-time telemetry:
 
 **Important for Python 3.12+**: The build scripts automatically use `pygame-ce` (Community Edition) which supports Python 3.12 and newer. The legacy `pygame` package does not support Python 3.12+.
 
+**Windows Build Note**: The build process uses a custom PyInstaller spec file (`coopad.spec`) that ensures the ViGEmClient.dll files from the vgamepad package are properly bundled. If you encounter DLL loading errors, ensure that:
+1. vgamepad is installed: `pip install vgamepad`
+2. The spec file is used: `pyinstaller coopad.spec`
+3. The `hook-vgamepad.py` file is present in the project root
+
 ### Build Commands
 
 **Windows executable:**

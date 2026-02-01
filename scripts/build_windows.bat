@@ -20,17 +20,12 @@ if not exist "main.py" (
 REM Install dependencies
 REM Note: Using pygame-ce (Community Edition) which supports Python 3.12+
 echo Installing dependencies...
-pip install pyinstaller pillow pygame-ce
+pip install pyinstaller pillow pygame-ce vgamepad
 
-REM Build executable
-echo Running PyInstaller...
-pyinstaller --noconfirm --onefile ^
-  --name coopad ^
-  --add-data "img;img" ^
-  --add-data "gp;gp" ^
-  --windowed ^
-  --icon=img\src_CooPad.ico ^
-  main.py
+REM Build executable using spec file
+echo Running PyInstaller with spec file...
+echo Note: The spec file handles proper bundling of vgamepad DLL files
+pyinstaller --noconfirm coopad.spec
 
 echo.
 echo Build complete!
