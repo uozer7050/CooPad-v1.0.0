@@ -2,10 +2,27 @@ import os
 import sys
 import threading
 import time
-import tkinter as tk
-from tkinter import ttk
+try:
+    import tkinter as tk
+    from tkinter import ttk
+except ImportError:
+    print("Error: tkinter is not installed. Please install it using 'sudo apt-get install python3-tk' on Linux.")
+    sys.exit(1)
+
+
 from PIL import Image, ImageOps, ImageTk
 from gp_backend import GpController
+import socket
+from queue import Queue
+import logging
+
+
+# Global queue for input states
+input_queue = Queue()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class App(tk.Tk):

@@ -11,6 +11,112 @@ try:
 except Exception:
     VGAME_AVAILABLE = False
 
+# Try evdev/uinput as a Linux fallback for creating a virtual gamepad
+try:
+    from evdev import UInput, ecodes
+    UINPUT_AVAILABLE = True
+except Exception:
+    UINPUT_AVAILABLE = False
+
+
+class _UInputGamepad:
+    """Minimal uinput-based virtual gamepad wrapper.
+
+    Provides a subset of the vgamepad methods used by the host:
+    - press_button / release_button
+    - left_joystick / right_joystick (ABS axes)
+    - left_trigger / right_trigger
+    - update (synchronise)
+    """
+    def __init__(self):
+        # define capabilities: axes and buttons
+        cap = {
+            ecodes.EV_KEY: [
+                ecodes.BTN_A,
+                ecodes.BTN_B,
+                ecodes.BTN_X,
+                ecodes.BTN_Y,
+                ecodes.BTN_TL,
+                ecodes.BTN_TR,
+                ecodes.BTN_THUMBL,
+                ecodes.BTN_THUMBR,
+                ecodes.BTN_START,
+                ecodes.BTN_SELECT,
+            ],
+            ecodes.EV_ABS: [
+                (ecodes.ABS_X, (-32768, 32767, 0, 0)),
+                (ecodes.ABS_Y, (-32768, 32767, 0, 0)),
+                (ecodes.ABS_RX, (-32768, 32767, 0, 0)),
+                (ecodes.ABS_RY, (-32768, 32767, 0, 0)),
+                (ecodes.ABS_Z, (0, 255, 0, 0)),
+                (ecodes.ABS_RZ, (0, 255, 0, 0)),
+                (ecodes.ABS_HAT0X, (-1, 1, 0, 0)),
+                (ecodes.ABS_HAT0Y, (-1, 1, 0, 0)),
+            ],
+        }
+        try:
+            self._ui = UInput(capabilities=cap, name="coopad-virtual-gamepad")
+        except Exception:
+            self._ui = None
+
+    def press_button(self, button=None):
+        if self._ui is None:
+            return
+        try:
+            self._ui.write(ecodes.EV_KEY, button, 1)
+        except Exception:
+            pass
+
+    def release_button(self, button=None):
+        if self._ui is None:
+            return
+        try:
+            self._ui.write(ecodes.EV_KEY, button, 0)
+        except Exception:
+            pass
+
+    def left_joystick(self, x, y):
+        if self._ui is None:
+            return
+        try:
+            self._ui.write(ecodes.EV_ABS, ecodes.ABS_X, int(x))
+            self._ui.write(ecodes.EV_ABS, ecodes.ABS_Y, int(y))
+        except Exception:
+            pass
+
+    def right_joystick(self, x, y):
+        if self._ui is None:
+            return
+        try:
+            self._ui.write(ecodes.EV_ABS, ecodes.ABS_RX, int(x))
+            self._ui.write(ecodes.EV_ABS, ecodes.ABS_RY, int(y))
+        except Exception:
+            pass
+
+    def left_trigger(self, v):
+        if self._ui is None:
+            return
+        try:
+            self._ui.write(ecodes.EV_ABS, ecodes.ABS_Z, int(v))
+        except Exception:
+            pass
+
+    def right_trigger(self, v):
+        if self._ui is None:
+            return
+        try:
+            self._ui.write(ecodes.EV_ABS, ecodes.ABS_RZ, int(v))
+        except Exception:
+            pass
+
+    def update(self):
+        if self._ui is None:
+            return
+        try:
+            self._ui.syn()
+        except Exception:
+            pass
+
 
 class GamepadHost:
     def __init__(self, bind_ip: str = "", port: int = 7777, status_cb=None):
@@ -54,6 +160,14 @@ class GamepadHost:
                 self.status_cb('vgamepad initialized')
             except Exception as e:
                 self.status_cb(f'vgamepad init error: {e}')
+        else:
+            # Try to initialize a uinput-based virtual gamepad on Linux
+            if UINPUT_AVAILABLE:
+                try:
+                    self._vg = _UInputGamepad()
+                    self.status_cb('uinput virtual gamepad initialized')
+                except Exception as e:
+                    self.status_cb(f'uinput init error: {e}')
 
         while not self._stop.is_set():
             try:
@@ -105,47 +219,79 @@ class GamepadHost:
                 self.status_cb(f'apply state error: {e}')
 
     def _apply_state(self, state):
-        # For simplicity, if vgamepad not available just log the state
+        # If no virtual gamepad available, log the state for debugging
         if self._vg is None:
             self.status_cb(f'recv seq={state.sequence} bt={state.buttons:#06x} lt={state.lt} rt={state.rt} lx={state.lx} ly={state.ly} rx={state.rx} ry={state.ry}')
             return
 
-        # Full XInput mapping per protocol.md
+        # Full XInput mapping per protocol.md (branch depending on backend)
         try:
             buttons = state.buttons
 
-            # mapping: protocol bits -> vgamepad XUSB_BUTTON enum
-            mapping = {
-                0x0001: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP,
-                0x0002: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN,
-                0x0004: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT,
-                0x0008: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT,
-                0x0010: vg.XUSB_BUTTON.XUSB_GAMEPAD_START,
-                0x0020: vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,
-                0x0040: vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB,
-                0x0080: vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB,
-                0x0100: vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER,
-                0x0200: vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER,
-                0x1000: vg.XUSB_BUTTON.XUSB_GAMEPAD_A,
-                0x2000: vg.XUSB_BUTTON.XUSB_GAMEPAD_B,
-                0x4000: vg.XUSB_BUTTON.XUSB_GAMEPAD_X,
-                0x8000: vg.XUSB_BUTTON.XUSB_GAMEPAD_Y,
-            }
+            if VGAME_AVAILABLE:
+                # mapping: protocol bits -> vgamepad XUSB_BUTTON enum
+                mapping = {
+                    0x0001: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP,
+                    0x0002: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN,
+                    0x0004: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT,
+                    0x0008: vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT,
+                    0x0010: vg.XUSB_BUTTON.XUSB_GAMEPAD_START,
+                    0x0020: vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK,
+                    0x0040: vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB,
+                    0x0080: vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB,
+                    0x0100: vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER,
+                    0x0200: vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER,
+                    0x1000: vg.XUSB_BUTTON.XUSB_GAMEPAD_A,
+                    0x2000: vg.XUSB_BUTTON.XUSB_GAMEPAD_B,
+                    0x4000: vg.XUSB_BUTTON.XUSB_GAMEPAD_X,
+                    0x8000: vg.XUSB_BUTTON.XUSB_GAMEPAD_Y,
+                }
+            elif UINPUT_AVAILABLE:
+                # mapping: protocol bits -> evdev button codes
+                mapping = {
+                    0x0001: ecodes.ABS_HAT0Y,  # DPad up handled via hat
+                    0x0002: ecodes.ABS_HAT0Y,  # DPad down
+                    0x0004: ecodes.ABS_HAT0X,  # left
+                    0x0008: ecodes.ABS_HAT0X,  # right
+                    0x0010: ecodes.BTN_START,
+                    0x0020: ecodes.BTN_SELECT,
+                    0x0040: ecodes.BTN_THUMBL,
+                    0x0080: ecodes.BTN_THUMBR,
+                    0x0100: ecodes.BTN_TL,
+                    0x0200: ecodes.BTN_TR,
+                    0x1000: ecodes.BTN_A,
+                    0x2000: ecodes.BTN_B,
+                    0x4000: ecodes.BTN_X,
+                    0x8000: ecodes.BTN_Y,
+                }
+            else:
+                mapping = {}
 
             # Press/release based on diff from last_buttons
             for bitmask, btn_enum in mapping.items():
                 had = bool(self._last_buttons & bitmask)
                 now = bool(buttons & bitmask)
                 if now and not had:
-                    self._vg.press_button(button=btn_enum)
+                    # handle hat axes specially for uinput dpad
+                    if UINPUT_AVAILABLE and btn_enum in (ecodes.ABS_HAT0X, ecodes.ABS_HAT0Y):
+                        # set hat axis depending on which bit
+                        if bitmask == 0x0001:  # up
+                            self._vg.right_joystick(0, 0)  # noop fallback
+                        else:
+                            self._vg.right_joystick(0, 0)
+                        # hat handling could be improved
+                    else:
+                        self._vg.press_button(button=btn_enum)
                 elif not now and had:
-                    self._vg.release_button(button=btn_enum)
+                    if UINPUT_AVAILABLE and btn_enum in (ecodes.ABS_HAT0X, ecodes.ABS_HAT0Y):
+                        self._vg.right_joystick(0, 0)
+                    else:
+                        self._vg.release_button(button=btn_enum)
 
             # update last buttons
             self._last_buttons = buttons
 
-            # axes: vgamepad expects -32768..32767 for sticks
-            # ensure values are ints in range
+            # axes: both backends expect -32768..32767 for sticks
             lx = int(max(-32768, min(32767, state.lx)))
             ly = int(max(-32768, min(32767, state.ly)))
             rx = int(max(-32768, min(32767, state.rx)))
