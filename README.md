@@ -8,7 +8,8 @@
 
 
 
-<img width="2186" height="1450" alt="upscalemedia-transformed (1)" src="https://github.com/user-attachments/assets/9731fcf5-f0d2-48ef-b0e0-55f6bab4c2b7" />
+<img width="2186" height="1390" alt="upscalemedia-transformed (1)" src="https://github.com/user-attachments/assets/2f59bfaa-b5b1-43af-a9b6-7a827cb36bdf" />
+
 
 
 **Cross-platform remote gamepad application for gaming over network**
