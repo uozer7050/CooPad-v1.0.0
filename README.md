@@ -106,7 +106,8 @@ For playing over the internet, use a VPN solution:
   - Download from: https://github.com/ViGEm/ViGEmBus/releases
   - Install the driver before running CooPad
   - Requires administrator privileges to install
-
+  - Reboot your computer (recommended)
+    
 ### Client Requirements (Windows)
 - **pygame-ce**: For reading physical gamepad input (pygame-ce 2.4+ required for Python 3.12+)
 - **Physical gamepad**: USB or Bluetooth connected (PS4, PS5, Xbox 360, or generic)
