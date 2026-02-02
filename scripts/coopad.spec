@@ -99,12 +99,7 @@ elif is_linux:
         'evdev.ecodes',
         'evdev.events',
         'evdev.uinput',
-        '_tkinter',
-        'tkinter.commondialog',
-        'tkinter.dialog',
-        'tkinter.filedialog',
-        'tkinter.messagebox',
-        'tkinter.simpledialog',
+        '_tkinter',  # Explicitly include _tkinter C extension
     ])
 
 a = Analysis(
