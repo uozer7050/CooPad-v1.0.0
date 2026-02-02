@@ -247,7 +247,7 @@ Output will be in the `dist/` directory.
 ## 📁 Project Structure
 
 ```
-v5.1/
+CooPad-v1.0.0/
 ├── gp/                    # Core gamepad communication package
 │   └── core/             # Host and client implementations
 │       ├── client.py     # Client-side gamepad capture
@@ -285,8 +285,8 @@ This is an open-source project. Contributions are welcome!
 ### Development Setup
 ```bash
 # Clone the repository
-git clone https://github.com/uozer7050/v5.1.git
-cd v5.1
+git clone https://github.com/uozer7050/CooPad-v1.0.0.git
+cd CooPad-v1.0.0
 
 # Install dependencies
 pip install -r requirements.txt
@@ -299,9 +299,9 @@ python3 main.py
 
 ## 🔗 Links
 
-- **GitHub Repository**: https://github.com/uozer7050/v5.1
-- **Issues & Support**: https://github.com/uozer7050/v5.1/issues
-- **Releases**: https://github.com/uozer7050/v5.1/releases
+- **GitHub Repository**: https://github.com/uozer7050/CooPad-v1.0.0
+- **Issues & Support**: https://github.com/uozer7050/CooPad-v1.0.0/issues
+- **Releases**: https://github.com/uozer7050/CooPad-v1.0.0/releases
 
 - User-friendly error messages and status indicators
 
