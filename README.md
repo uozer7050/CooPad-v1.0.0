@@ -2,14 +2,15 @@
 
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-<img width="2528" height="1696" alt="upscalemedia-transformed" src="https://github.com/user-attachments/assets/1719651f-1ab5-4892-a9d5-cce688c6a36f" />
+![CooPad Banner](img/543521876-2f59bfaa-b5b1-43af-a9b6-7a827cb36bdt.png)
 
 
 
 
 
 
-<img width="2186" height="1390" alt="upscalemedia-transformed (1)" src="https://github.com/user-attachments/assets/2f59bfaa-b5b1-43af-a9b6-7a827cb36bdf" />
+
+![CooPad Diagram](img/543918425-1719651f-1ab5-4892-a9d5-cce688c6a36f.png)
 
 
 
